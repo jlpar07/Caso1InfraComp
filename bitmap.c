@@ -53,7 +53,7 @@ void convertir_a_grises(PALETARGB *paleta, int num_colores)
         // paleta[i].rgbBlue = gris;
 
         __asm {
-            push eax
+            push eax   //preservar registros
             push ebx
             push ecx
             push edx
@@ -61,8 +61,8 @@ void convertir_a_grises(PALETARGB *paleta, int num_colores)
 
             mov eax, ecx      
             add eax, ecx      
-            add eax, eax      
-            mov ebx, [ebp+8]
+            add eax, eax      //cada PALETARGB son 4 bytes
+            mov ebx, [ebp+8]  //dirección base de la paleta
             add ebx, eax // EBX ahora tiene la direccion de paleta[i]
 
 
@@ -76,11 +76,12 @@ void convertir_a_grises(PALETARGB *paleta, int num_colores)
             add eax, ecx // La suma de red, green y blue se guardan en EAX
             mov ecx, 3 // se divide entre 3 la sumatoria anterior
             xor edx, edx 
-            div ecx
+            div ecx   
             mov [ebx+2], al// se guarda el color gris en red, blue y green
             mov [ebx+1], al
             mov [ebx], al   
 
+            //restaurar registros
             pop edx
             pop eax
             pop ebx
