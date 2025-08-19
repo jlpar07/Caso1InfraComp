@@ -43,13 +43,42 @@ void convertir_a_grises(PALETARGB* paleta, int num_colores) {
     int i;   
     int gris;
 
+
     for ( i = 0; i < num_colores; i++) {
-        gris = (paleta[i].rgbRed +  paleta[i].rgbGreen + paleta[i].rgbBlue)/3;
-        paleta[i].rgbRed = gris;
-        paleta[i].rgbGreen = gris;
-        paleta[i].rgbBlue = gris;
+        // gris = (paleta[i].rgbRed +  paleta[i].rgbGreen + paleta[i].rgbBlue)/3;
+        // paleta[i].rgbRed = gris;
+        // paleta[i].rgbGreen = gris;
+        // paleta[i].rgbBlue = gris;
         
-        
+__asm{
+    // 1. Obtener la dirección base de paleta[i]
+    mov ecx, i                     // Cargar el índice 'i' en el registro ECX
+    lea eax, [ecx*4]               // Calcular el desplazamiento (i * 4 bytes). EAX ahora contiene el offset.
+    mov ebx, paleta                // Cargar la dirección base del arreglo 'paleta' en EBX
+    add ebx, eax                   // EBX ahora contiene la dirección exacta de paleta[i]
+
+    // Ahora que EBX apunta a paleta[i], podemos usarlo como base
+    // para acceder a los campos (rgbRed, etc.) con un desplazamiento fijo.
+    // NOTA: El orden común en BMP es B, G, R. Asumiremos que rgbBlue está en el offset 0, 
+    // rgbGreen en +1 y rgbRed en +2.
+    
+    // 2. Sumar los componentes R, G y B
+    movzx eax, byte ptr [ebx+2]      // Carga el valor de Rojo (byte) en EAX, extendiéndolo a 32 bits
+    movzx ecx, byte ptr [ebx+1]      // Carga el valor de Verde (byte) en ECX
+    add eax, ecx                     // Suma el valor de Verde a EAX
+    movzx ecx, byte ptr [ebx]        // Carga el valor de Azul (byte) en ECX
+    add eax, ecx                     // Suma el valor de Azul a EAX
+
+    // 3. Dividir para obtener el promedio
+    mov ecx, 3                       // Carga el divisor (3) en ECX
+    xor edx, edx                     // Limpia EDX para la división
+    div ecx                          // Divide EAX entre ECX. El resultado queda en EAX.
+
+    // 4. Asignar el nuevo valor 'gris' a todos los componentes
+    mov byte ptr [ebx+2], al         // Mover el byte menos significativo de EAX (AL) a la posición de Rojo
+    mov byte ptr [ebx+1], al         // Mover el mismo valor a Verde
+    mov byte ptr [ebx], al           // Mover el mismo valor a Azul
+}
     }
 
 }
